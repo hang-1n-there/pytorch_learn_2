@@ -49,4 +49,9 @@ class Autoencoder(nn.Module):
             nn.BatchNorm1d(500),
             nn.Linear(500,28*28)
         )
+    def forword(self, x):
+        z = self.encoder(x)
+        y = self.decoder(x)
         
+        return y
+     
