@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 class Autoencoder(nn.Module):
@@ -49,9 +48,9 @@ class Autoencoder(nn.Module):
             nn.BatchNorm1d(500),
             nn.Linear(500,28*28)
         )
-    def forword(self, x):
+        
+    def forward(self, x):
         z = self.encoder(x)
-        y = self.decoder(x)
+        y = self.decoder(z)
         
         return y
-     
