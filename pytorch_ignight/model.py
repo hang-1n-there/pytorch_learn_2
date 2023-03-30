@@ -20,13 +20,11 @@ class ImgClassifier(nn.Module):
             nn.Linear(100, 50),
             nn.ReLU(),
             nn.BatchNorm1d(50),
-            nn.Linear(50,20),
-            nn.ReLU(),
-            nn.BatchNorm1d(20),
-            nn.Linear(20,10),
+            nn.Linear(50,10),
             nn.ReLU(),
             nn.BatchNorm1d(10),
-            nn.Linear(10,output_size)
+            nn.Linear(10,output_size),
+            nn.Softmax(dim=-1)
         )
         
     def forward(self, x):
