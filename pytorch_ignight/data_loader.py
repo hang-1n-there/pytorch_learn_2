@@ -39,3 +39,41 @@ def load_mnist(is_train=True, flatten=True):
         x = x.view(x.size(0), -1)
 
     return x, y
+
+def get_loaders(config):
+    x, y = load_mnist(is_train=True, flatten=False)
+    
+    train_cnt = int(x.size(0) * config.train_ratio)
+    valid_cnt = x.size(0) - train_cnt
+    
+    indices = torch.randperm(x.size(0))
+    
+    train_x, valid_x = torch.index_select(
+        x, dim=0, index=indices
+    ).split([train_cnt,valid_cnt], dim=0)
+    
+    train_y, valid_y = torch.index_select(
+        x, dim=0, index=indices
+    ).split([train_cnt,valid_cnt], dim=0)
+    
+    train_loader = DataLoader(
+        Dataset=MnistDataset(train_x,train_y,flatten=True),
+        batch_size=config.batch_size,
+        shuffle=True
+    )
+    valid_loader = DataLoader(
+        Dataset=MnistDataset(valid_x,valid_y,flatten=True),
+        batch_size=config.batch_size,
+        shuffle=True
+    )
+    
+    test_x , test_y = load_mnist(is_train=False, flatten=False)
+    
+    test_loader = DataLoader(
+        Dataset=MnistDataset(train_x,train_y,faltten=True),
+        batch_size=config.batch_size,
+        shuffle=False
+    )
+    
+    return train_loader,valid_loader,test_loader
+    
