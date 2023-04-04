@@ -37,6 +37,10 @@ def main(config):
 
     train_loader , valid_loader , test_loader = get_loaders(config)
 
+    print('Train : ', train_loader.dataset)
+    print('Valid : ', train_loader.dataset)
+    print('Test : ', train_loader.dataset)
+    
     model = ImageClassifier(28**2,10).to(device)
     optimizer = optim.Adam(model.parameters())
     crit = nn.CrossEntropyLoss()
