@@ -3,14 +3,19 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
 import torch.nn.utils as utils
 import numpy as np
 
 from ignite.engine import Engine
 from ignite.engine import Events
+from ignite.metrics import RunningAverage
+from ignite.contrib.handlers.tqdm_logger import ProgressBar
 
 from utils import get_parameter_norm
 from utils import get_grad_norm
+
+VERBOSE_BATCH_WISE = 2
 
 class MyEngine(Engine):
     def __init__(self,func,model, crit, optimizer, config):
@@ -73,6 +78,48 @@ class MyEngine(Engine):
             
         return {'loss' : float(loss) , 'accuracy' : float(accuracy)}
     
+    @staticmethod
+    def attach(train_engine, validation_engine,verbose=VERBOSE_BATCH_WISE):
+        def attach_running_average(engine,metric_name):
+            RunningAverage(output_transform=lambda x : x[metric_name]).attach(
+                engine,
+                metric_name
+            )
+        
+        training_metrics_name = ['loss', 'accuracy' , "|param|" , "|g_param|"]
+        
+        for metrics_name in training_metrics_name:
+            attach_running_average(train_engine, metrics_name)
+        
+        # iteration 마다 출력
+        if verbose >= VERBOSE_BATCH_WISE:
+            pbar = ProgressBar(bar_format = None, ncols=120)
+            pbar.attach(train_engine, training_metrics_name)
+        
+        # Epoch 마다 출력
+        if verbose >= VERBOSE_BATCH_WISE:
+            @train_engine.on(Events.EPOCH_COMPLETED)
+            def print_train_logs(engine):
+                print('Epoch : {:d} , Loss {:.4e} , Accuracy : {:.4e} , P_norm : {:.2e} , G_norm : {:.2e}'.format(
+                    engine.state.epochengine.state.metrics['loss'],
+                    engine.state.metrics['accuracy'],
+                    engine.state.metrics['|param|'],
+                    engine.state.metrics['|g_param|'],    
+                ))
+        validation_metric_names = ['loss' , 'accuracy']
+        
+        for metric_names in validation_metric_names:
+            attach_running_average(validation_engine, metric_names)
+            
+        if verbose >= VERBOSE_BATCH_WISE:
+            @validation_engine.on(Events.EPOCH_COMPLETED)
+            def print_train_logs(engine):
+                print('Loss {:.4e} , Accuracy : {:.4e} , Best_loss'.format(
+                    engine.state.epochengine.state.metrics['loss'],
+                    engine.state.metrics['accuracy'],
+                    engine.state.best_loss,  
+                ))
+        
 class Trainer():
     def __init__(self,config):
         self.config = config
@@ -81,6 +128,4 @@ class Trainer():
         
         train_engine = MyEngine(MyEngine.train, model, crit, optimizer, self.config)
         validation_engine = MyEngine(MyEngine.validate, model, crit, optimizer, self.config)
-        
-        
         
