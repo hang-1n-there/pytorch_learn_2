@@ -4,10 +4,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from mnist_classification.models.cnn_model import ConvolusionalClassifier
+from mnist_classification.models.cnn_model import ConvolutionalClassifier
 from mnist_classification.models.fc_model import FullyConnectedClassifier
-from mnist_classification import Trainer
-from mnist_classification import get_loaders
+from mnist_classification import trainer as _trainer
+from mnist_classification.data_loader import get_loaders
 
 def define_argparser():
     p = argparse.ArgumentParser()
@@ -30,7 +30,7 @@ def get_model(config):
     if config.model == 'fc':
         model = FullyConnectedClassifier(28**2,10)
     elif config.model == 'cnn':
-        model = ConvolusionalClassifier(10)
+        model = ConvolutionalClassifier(10)
     else :
         raise NotImplementedError('You need to specify model name.')
     
@@ -48,7 +48,7 @@ def main(config):
     optimizer = optim.Adam(model.parameters())
     crit = nn.NLLLoss()
 
-    trainer = Trainer(config)
+    trainer = _trainer(config)
     trainer.train(model, crit, optimizer, train_loader, valid_loader)
 
 if __name__ == '__main__':

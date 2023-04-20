@@ -23,7 +23,7 @@ class ConvolutionBlock(nn.Module):
         y = self.layers(x)
         # |y| = (Batch_size, out_channel, H , W)
         
-class ConvolusionalClassifier(nn.Module):
+class ConvolutionalClassifier(nn.Module):
     def __init__(self,output_size):
         self.output_size = output_size
         
