@@ -22,3 +22,39 @@ class ConvolutionBlock(nn.Module):
         # |x| = (Batch_size, in_channel, H , W)
         y = self.layers(x)
         # |y| = (Batch_size, out_channel, H , W)
+        
+class ConvolusionalClassifier(nn.Module):
+    def __init__(self,output_size):
+        self.output_size = output_size
+        
+        super().__init__()
+        
+        # 28 -> 14 -> 7 -> 4 -> 2 -> 1
+        self.blocks = nn.Sequential(
+            ConvolutionBlock(1,32), 
+            ConvolutionBlock(32,64),
+            ConvolutionBlock(64,128),
+            ConvolutionBlock(128,256),
+            ConvolutionBlock(256,512),
+        )
+        
+        self.layers = nn.Sequential(
+            nn.Linear(512,50),
+            nn.ReLU(),
+            nn.BatchNorm1d(50),
+            nn.Linear(50,10),
+            nn.Softmax(dim=-1),
+        )
+        
+    def forward(self,x):
+        assert x.dim() > 2
+        
+        if x.dim() == 3:
+            x.view(-1, 1, x.size(-2), x.size(-2))
+        
+        z = self.blocks(x)
+        
+        y = self.layers(z.squeeze())
+
+        return y
+
